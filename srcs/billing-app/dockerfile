@@ -1,0 +1,15 @@
+FROM alpine:3.18
+
+RUN apk update && \
+    apk add --no-cache postgresql15 postgresql15-client && \
+    mkdir -p /run/postgresql && \
+    chown -R postgres:postgres /run/postgresql
+
+ENV PGDATA=/var/lib/postgresql/data
+RUN mkdir -p $PGDATA && chown -R postgres:postgres $PGDATA
+
+USER postgres
+
+EXPOSE 5432
+
+CMD ["postgres"]
