@@ -1,0 +1,14 @@
+FROM alpine:3.18
+
+RUN apk add --no-cache postgresql15 postgresql15-client su-exec
+
+# Add this line to define the path inside the container
+ENV PGDATA=/var/lib/postgresql/data
+
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Ensure the data directory exists and is owned by postgres
+RUN mkdir -p /var/lib/postgresql/data && chown -R postgres:postgres /var/lib/postgresql/data
+
+ENTRYPOINT ["entrypoint.sh"]

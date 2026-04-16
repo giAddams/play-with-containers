@@ -1,0 +1,88 @@
+services:
+  # 1. Inventory Database
+  inventory-database:
+    build: ./inventory-database
+    container_name: inventory-database
+    restart: always
+    environment:
+      - POSTGRES_USER=${INVENTORY_DB_USER}
+      - POSTGRES_PASSWORD=${INVENTORY_DB_PASSWORD}
+      - POSTGRES_DB=${INVENTORY_DB_NAME}
+    volumes:
+      - inventory-db-data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+
+  # 2. Billing Database
+  billing-database:
+    build: ./billing-database
+    container_name: billing-database
+    restart: always
+    environment:
+      - POSTGRES_USER=${BILLING_DB_USER}
+      - POSTGRES_PASSWORD=${BILLING_DB_PASSWORD}
+      - POSTGRES_DB=${BILLING_DB_NAME}
+    volumes:
+      - billing-db-data:/var/lib/postgresql/data
+    networks:
+      - backend-network
+
+  # 3. RabbitMQ Message Queue
+  rabbitmq-server:
+    build: ./rabbitmq-server
+    container_name: rabbitmq-server
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    networks:
+      - backend-network
+
+  # 4. Inventory App
+  inventory-app:
+    build: ./inventory-app
+    container_name: inventory-app
+    restart: always
+    depends_on:
+      - inventory-database
+    env_file: ../.env
+    networks:
+      - backend-network
+
+  # 5. Billing App
+  billing-app:
+    build: ./billing-app
+    container_name: billing-app
+    restart: always
+    depends_on:
+      - billing-database
+      - rabbitmq-server
+    env_file: ../.env
+    networks:
+      - backend-network
+
+  # 6. API Gateway
+  api-gateway-app:
+    build: ./api-gateway-app
+    container_name: api-gateway-app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - inventory-app
+      - billing-app
+      - rabbitmq-server
+    volumes:
+      - api-gateway-logs:/var/logs/api-gateway
+    env_file: ../.env
+    networks:
+      - backend-network
+
+volumes:
+  inventory-db-data:
+  billing-db-data:
+  api-gateway-logs:
+
+networks:
+  backend-network:
+    driver: bridge

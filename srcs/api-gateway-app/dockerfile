@@ -1,0 +1,41 @@
+# 1. Use the penultimate Alpine version as per project requirements
+FROM alpine:3.18
+
+# 2. Install Python, Pip, and dependencies
+# Inside your Dockerfile
+RUN apk add --no-cache python3 py3-pip netcat-openbsd \
+    # Add these for Postgres compatibility:
+    postgresql-dev gcc musl-dev 
+
+# Now the requirements will install without errors
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 3. Set the working directory inside the container
+WORKDIR /app
+
+# 4. Copy requirements file first (Optimization: leverages Docker cache)
+# Ensure you have a requirements.txt containing: flask, flask-sqlalchemy, python-dotenv, pika
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 5. Copy the rest of your application source code
+COPY . .
+
+# 6. Create the log directory required by the project instructions
+# "api-gateway-app volume contains your API gateway logs"
+RUN mkdir -p /var/logs/api-gateway && \
+    chmod -R 777 /var/logs/api-gateway
+
+# 7. Security: Create a non-root user to run the application
+RUN addgroup -S gatewaygroup && adduser -S gatewayuser -G gatewaygroup
+RUN chown -R gatewayuser:gatewaygroup /app /var/logs/api-gateway
+USER gatewayuser
+
+# 8. Document the port (Must be 3000 per instructions)
+EXPOSE 3000
+
+# 9. Start the server
+# Note: We use the python executable directly here. 
+# If you use the entrypoint.sh I provided earlier, change this to:
+# ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["python", "server.py"]
