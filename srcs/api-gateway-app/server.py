@@ -14,15 +14,7 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
-# CRITICAL: Load environment variables FIRST (before importing app)
-env_candidates = [
-    Path('/home/vagrant/.env'),
-    Path(__file__).resolve().parents[2] / '.env'
-]
-for env_file in env_candidates:
-    if env_file.exists():
-        load_dotenv(env_file, override=True)
-        break
+load_dotenv()
 
 from app import create_app
 

@@ -1,15 +1,22 @@
 FROM alpine:3.18
 
+# 1. Install Python AND the PostgreSQL library (psycopg2 needs postgresql-dev)
 RUN apk update && \
-    apk add --no-cache postgresql15 postgresql15-client && \
-    mkdir -p /run/postgresql && \
-    chown -R postgres:postgres /run/postgresql
+    apk add --no-cache python3 py3-pip postgresql-dev gcc musl-dev
 
-ENV PGDATA=/var/lib/postgresql/data
-RUN mkdir -p $PGDATA && chown -R postgres:postgres $PGDATA
+# 2. Set the working directory
+WORKDIR /app
 
-USER postgres
+# 3. Copy requirements and install them
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 4. Copy the rest of the app
+COPY . .
+
+# 5. Run as root (default) so we have permissions, or a specific app user
+# Remove "USER postgres" - that's only for the database containers!
 
 EXPOSE 5432
 
-CMD ["postgres"]
+CMD ["python3", "server.py"]
