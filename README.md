@@ -1,10 +1,9 @@
-# CRUD Master - Microservices Architecture
+# Play-with-containers
 
-A production-ready microservices project demonstrating distributed system design principles with Python, Flask, PostgreSQL, RabbitMQ, and Vagrant.
-
+A containerized, multi-tier microservice architecture designed for inventory management and asynchronous billing processing.
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Project Overview](#project-overview)
 - [Architecture](#architecture)
@@ -20,40 +19,38 @@ A production-ready microservices project demonstrating distributed system design
 
 ---
 
-## 🎯 Project Overview
+## Key Vocabulary & Concepts
 
-**CRUD Master** is a microservices-based movie inventory and billing system that demonstrates:
-
-- **Distributed Architecture**: Three independent services running on separate VMs
-- **Reverse Proxy Pattern**: API Gateway acting as reverse proxy for unified client entry point
-- **HTTP Proxy Pattern**: API Gateway routing requests via HTTP proxy to backend services
-- **Message Queue Pattern**: Asynchronous order processing via RabbitMQ
-- **Database Persistence**: PostgreSQL for data durability
-- **Service Resilience**: Queue durability and eventual consistency
-- **Infrastructure as Code**: Vagrant for reproducible VM provisioning
+- **Container**: A lightweight, standalone package that includes everything needed to run a piece of software (code, runtime, libraries).
+- **Image**: The read-only "blueprint" or template used to create a container.
+- **Docker Compose**: A tool for defining and running multi-container applications using a single YAML file.
+- **Dockerfile**: A text document containing all the commands a user could call on the command line to assemble an image.
+- **Alpine Linux**: PostgreSQL for data durability
+- **Service Discovery**: The process of containers finding each other using names (like inventory-app) instead of hardcoded IP addresses.
+- **Gateway**: A server that acts as an API front-end, receiving requests and "proxying" them to the correct backend service.
+- **Volume**: A persistent storage mechanism managed by Docker that lives outside the container's lifecycle.
 
 ### Stack
 
-| Component              | Technology           |
-| ---------------------- | -------------------- |
-| **VMs & Provisioning** | VirtualBox + Vagrant |
-| **Runtime**            | Python 3.10+         |
-| **Web Framework**      | Flask                |
-| **Databases**          | PostgreSQL 16        |
-| **Message Queue**      | RabbitMQ 4.x         |
-| **Process Manager**    | PM2                  |
-| **Testing**            | Postman              |
-| **Documentation**      | OpenAPI/Swagger      |
+| Component              | Technology                |
+| ---------------------- | ------------------------- |
+| **Languages:**         | Python 3.11 (Flask)       |
+| **Containerization:**  | Docker & Docker Compose   |
+| **Database:**          | PostgreSQL 15             |
+| **Message Broker:**    | RabbitMQ                  |
+| **Base OS:**           | Alpine Linux(for ultra-   |
+|                        | lightweight images)       |
+
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
                           ┌─────────────────────────────────┐
                           │        Client Machine           │
-                          │    (Postman / Browser)          │
-                          └──────────────┬────────────────┘
+                          │      (Postman / Browser)        │
+                          |_________________________________|
                                          │
                     ┌────────────────────┼────────────────────┐
                     │                    │                    │
@@ -146,7 +143,7 @@ Billing API Consumer reads queue
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites
 
 ### System Requirements
 
@@ -190,7 +187,7 @@ git --version
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Step 1: Clone and Navigate
 
@@ -254,64 +251,81 @@ This starts:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 CRUD-MASTER/
 │
-├── README.md                           # Main documentation (this file)
-├── CRUD_Master_README.md               # Detailed setup guide
-├── AUDIT_VERIFICATION_CHECKLIST.md     # Audit requirements verification
+├── README.md                           
+├── CRUD_Master_README.md               
+├── AUDIT_VERIFICATION_CHECKLIST.md     
 │
-├── Vagrantfile                         # VM provisioning configuration
-├── .env                                # Environment variables (credentials)
-├── .gitignore                          # Git ignore rules
+├── Vagrantfile                         
+├── .env                                
+├── .gitignore                          
 │
-├── srcs/                               # Application source code
-│   ├── api-gateway-app/                # API Gateway service
-│   │   ├── server.py                   # Entry point (Flask app)
-│   │   ├── requirements.txt            # Python dependencies
-│   │   └── app/__init__.py             # Route definitions
+├── srcs/
+│   ├── inventory-database/                
+|   |   ├── Dockerfile             
+│   │   └── entrypoint.sh
+|   |
+│   ├── billing-database/                
+|   |   ├── Dockerfile             
+│   │   └── entrypoint.sh
+|   |
+│   ├── rabbitmq-server/                
+|   |   ├── Dockerfile             
+│   │   └── entrypoint.sh
+|   |                            
+│   ├── api-gateway-app/                
+│   │   ├── server.py                   
+│   │   ├── requirements.txt
+|   |   ├── Dockerfile             
+│   │   └── app/__init__.py            
 │   │
-│   ├── inventory-app/                  # Inventory API service
-│   │   ├── server.py                   # Entry point
-│   │   ├── requirements.txt            # Dependencies
+│   ├── inventory-app/                 
+│   │   ├── server.py
+|   |   ├── Dockerfile                      
+│   │   ├── requirements.txt            
 │   │   └── app/
-│   │       ├── __init__.py             # App factory
-│   │       ├── routes.py               # CRUD endpoints
-│   │       ├── models.py               # SQLAlchemy models
-│   │       └── db.py                   # Database setup
+│   │       ├── __init__.py             
+│   │       ├── routes.py               
+│   │       ├── models.py               
+│   │       └── db.py                  
 │   │
-│   └── billing-app/                    # Billing API service
-│       ├── server.py                   # Entry point (RabbitMQ consumer)
-│       ├── requirements.txt            # Dependencies
-│       └── app/
-│           ├── __init__.py             # App factory
-│           ├── consumer.py             # RabbitMQ consumer
-│           ├── models.py               # SQLAlchemy models
-│           └── db.py                   # Database setup
+│   ├── billing-app/                   
+│   │    ├── server.py
+|   │    ├── Dockerfile                      
+│   │    ├── requirements.txt            
+│   │    └── app/
+│   │        ├── __init__.py             
+│   │        ├── consumer.py             
+│   │        ├── models.py              
+│   │        └── db.py                  
+│   │
+│   └── docker-compose.yml
 │
-├── scripts/                            # Provisioning scripts
-│   ├── setup_inventory.sh              # Inventory VM setup
-│   ├── setup_billing.sh                # Billing VM setup
-│   └── setup_gateway.sh                # Gateway VM setup
+├── scripts/                            
+│   ├── setup_inventory.sh              
+│   ├── setup_billing.sh                
+│   └── setup_gateway.sh               
 │
-├── logs/                               # Service logs
+├── logs/                               
 │   ├── inventory-api.log
 │   ├── billing-api.log
 │   └── gateway.log
 │
-├── CRUD_Master.postman_collection.json # Postman collection (all endpoints)
-├── openapi.yaml                        # API specification
-├── health_check_report.txt             # Health check results
-├── postman-results.json                # Test execution results
+├── CRUD_Master.postman_collection.json 
+├── openapi.yaml                        
+├── health_check_report.txt             
+├── postman-results.json                
 │
-└── start_services.sh                   # Script to start all services
+└── start_services.sh                   
 ```
 
 ---
 
-## 🔧 Services Overview
+## Services Overview
 
 ### 1. API Gateway (Gateway-VM)
 
@@ -333,10 +347,9 @@ CRUD-MASTER/
 #### Configuration:
 
 ```env
-GATEWAY_IP=192.168.56.10
-GATEWAY_PORT=3000
-INVENTORY_IP=192.168.56.11
-INVENTORY_PORT=8080
+GATEWAY_IP=api-gateway-app
+INVENTORY_IP=inventory-app
+BILLING_IP=billing-app
 ```
 
 ---
@@ -419,7 +432,7 @@ RABBITMQ_QUEUE=billing_queue
 
 ---
 
-## 🔗 API Endpoints
+## API Endpoints
 
 ### Base URL
 
