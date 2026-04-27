@@ -56,3 +56,4 @@ logs/
 *.txt
 !srcs/**/requirements.txt
 
+.env
